@@ -1,0 +1,14 @@
+names:
+- jde
+- pot
+- cup
+nc: 3
+roboflow:
+  license: MIT
+  project: logo_detection-uukbr
+  url: https://universe.roboflow.com/bilgehanworkspace/logo_detection-uukbr/dataset/3
+  version: 3
+  workspace: bilgehanworkspace
+test: ../test/images
+train: /content/datasets/logo_detection-3/train/images
+val: /content/datasets/logo_detection-3/valid/images

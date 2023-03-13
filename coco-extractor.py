@@ -14,19 +14,37 @@ def makeDirectory(dirName):
 def getImagesFromClassName(className):
     makeDirectory(f'downloaded_images/{className}/train/images')
     makeDirectory(f'downloaded_images/{className}/train/labels')
+    makeDirectory(f'downloaded_images/{className}/test/images')
+    makeDirectory(f'downloaded_images/{className}/test/labels')
+    makeDirectory(f'downloaded_images/{className}/valid/images')
+    makeDirectory(f'downloaded_images/{className}/valid/labels')
 
     catIds = coco.getCatIds(catNms=[className])
     imgIds = coco.getImgIds(catIds=catIds )
     images = coco.loadImgs(imgIds)
 
     print(f"Total Images: {len(images)} for class '{className}'")
+
+    trainset_limit = int(len(images) * 0.7)
+    testset_limit = int(len(images) * 0.85) 
+    validset_limit = int(len(images) * 0.7) 
+
     counter = -1
     for im in images:
         counter += 1
+
+        
+        if counter < trainset_limit:
+            dataset_folder = 'train'
+        elif counter < testset_limit:
+            dataset_folder = 'test'
+        else:
+            dataset_folder = 'valid'
+
         image_file_name = im['file_name']
         label_file_name = im['file_name'].split('.')[0] + '.txt'
 
-        fileExists = os.path.exists(f'downloaded_images/{className}/train/images/{image_file_name}')
+        fileExists = os.path.exists(f'downloaded_images/{className}/{dataset_folder}/images/{image_file_name}')
         if(not fileExists):
             img_data = requests.get(im['coco_url']).content
             annIds = coco.getAnnIds(imgIds=im['id'], catIds=catIds, iscrowd=None)
@@ -48,9 +66,9 @@ def getImagesFromClassName(className):
                 if(i < len(anns) - 1):
                     s += '\n'
             
-            with open(f'downloaded_images/{className}/train/images/{image_file_name}', 'wb') as image_handler:
+            with open(f'downloaded_images/{className}/{dataset_folder}/images/{image_file_name}', 'wb') as image_handler:
                 image_handler.write(img_data)
-            with open(f'downloaded_images/{className}/train/labels/{label_file_name}', 'w') as label_handler:
+            with open(f'downloaded_images/{className}/{dataset_folder}/labels/{label_file_name}', 'w') as label_handler:
                 label_handler.write(s)
         else:
            print(f"{className}. {image_file_name} - Already Downloaded.")
