@@ -6,29 +6,32 @@ import threading
 
 def makeDirectory(dirName):
     try:
-        os.mkdir(dirName)
+        os.makedirs(dirName, exist_ok=True)
         print(f"\nMade {dirName} Directory.\n")
     except:
         pass
 
 def getImagesFromClassName(className):
-    makeDirectory(f'downloaded_images/{className}')
+    makeDirectory(f'downloaded_images/{className}/train/images')
+    makeDirectory(f'downloaded_images/{className}/train/labels')
+
     catIds = coco.getCatIds(catNms=[className])
     imgIds = coco.getImgIds(catIds=catIds )
     images = coco.loadImgs(imgIds)
 
     print(f"Total Images: {len(images)} for class '{className}'")
-
+    counter = -1
     for im in images:
+        counter += 1
         image_file_name = im['file_name']
         label_file_name = im['file_name'].split('.')[0] + '.txt'
 
-        fileExists = os.path.exists(f'downloaded_images/{className}/{image_file_name}')
+        fileExists = os.path.exists(f'downloaded_images/{className}/train/images/{image_file_name}')
         if(not fileExists):
             img_data = requests.get(im['coco_url']).content
             annIds = coco.getAnnIds(imgIds=im['id'], catIds=catIds, iscrowd=None)
             anns = coco.loadAnns(annIds)    
-            print(f"{className}. Downloading - {image_file_name}")
+            print(f"{className}. Downloading - {image_file_name} - {counter}")
             for i in range(len(anns)):
                 # Yolo Format: center-x center-y width height
                 # All values are relative to the image.
@@ -37,7 +40,7 @@ def getImagesFromClassName(className):
                 width = anns[i]['bbox'][2] / im['width']
                 height = anns[i]['bbox'][3] / im['height']
                 
-                s = "0 " + str((topLeftX + (topLeftX + width)) / 2) + " " + \
+                s = "2 " + str((topLeftX + (topLeftX + width)) / 2) + " " + \
                 str((topLeftY + (topLeftY + height)) / 2) + " " + \
                 str(width) + " " + \
                 str(height)
@@ -45,9 +48,9 @@ def getImagesFromClassName(className):
                 if(i < len(anns) - 1):
                     s += '\n'
             
-            with open(f'downloaded_images/{className}/{image_file_name}', 'wb') as image_handler:
+            with open(f'downloaded_images/{className}/train/images/{image_file_name}', 'wb') as image_handler:
                 image_handler.write(img_data)
-            with open(f'downloaded_images/{className}/{label_file_name}', 'w') as label_handler:
+            with open(f'downloaded_images/{className}/train/labels/{label_file_name}', 'w') as label_handler:
                 label_handler.write(s)
         else:
            print(f"{className}. {image_file_name} - Already Downloaded.")
